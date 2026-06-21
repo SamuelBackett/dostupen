@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta
+      name="description"
+      content="Отправьте заявку и получите ответ по её уникальному номеру."
+    >
+    <title>Доступен — отправить заявку</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><circle cx=%2250%22 cy=%2250%22 r=%2240%22 fill=%22%2339ff14%22/></svg>"
+    >
+    <link rel="stylesheet" href="./styles.css">
+    <script src="./app.js" defer></script>
+  </head>
+  <body>
+    <main class="page">
+      <header class="hero">
+        <div>
+          <a class="brand" href="./" aria-label="Доступен — главная">Доступен</a>
+          <p class="eyebrow">В Белый списках</p>
+        </div>
+      </header>
+      <div>
+        <p>Во многих регионах белые списки внедрены на постоянной основе с мая 2025 года. Где-то их включают во время прилетов. Страдают от этого как простые люди, так и бизнес. Интернет превращается в пару десятков доступных ресурсов полностью подконтрольных государству. Это не интернет. Мы не можем победить белые списки, но мы можем помочь проектам попасть в них, не занося в минцифры чемодан денег. Давайте попробуем, технически это не очень сложно.</p>
+      </div>
+
+      <section class="card" id="request-section" aria-labelledby="request-title">
+        <button
+          class="card__toggle"
+          id="request-toggle"
+          type="button"
+          aria-expanded="true"
+          aria-controls="request-body"
+        >
+          <span class="step">01</span>
+          <span class="card__toggle-copy">
+            <h2 id="request-title">Новая заявка</h2>
+          </span>
+          <span class="card__toggle-mark" aria-hidden="true"></span>
+        </button>
+
+        <div id="request-body">
+          <form
+            id="request-form"
+            action="https://formspree.io/f/mwvjggll"
+            method="POST"
+          >
+            <input id="request-id-input" type="hidden" name="request_id">
+            <input type="hidden" name="_subject" value="Новая заявка с сайта">
+
+            <label for="website">Адрес сайта</label>
+            <input
+              id="website"
+              name="website"
+              type="url"
+              maxlength="500"
+              inputmode="url"
+              autocomplete="url"
+              placeholder="https://example.ru"
+              required
+            >
+
+            <fieldset class="field-group">
+              <legend>Тип проекта</legend>
+              <div class="radio-group">
+                <label class="radio-option">
+                  <input
+                    type="radio"
+                    name="project_type"
+                    value="Коммерческий проект"
+                    required
+                  >
+                  <span>Коммерческий проект</span>
+                </label>
+                <label class="radio-option">
+                  <input
+                    type="radio"
+                    name="project_type"
+                    value="Некоммерческий проект"
+                    required
+                  >
+                  <span>Некоммерческий проект</span>
+                </label>
+              </div>
+            </fieldset>
+
+            <div class="form-grid">
+              <div class="select-field">
+                <label for="registrar">Регистратор домена</label>
+                <select id="registrar" name="registrar" required>
+                  <option value="" selected disabled>Выберите регистратора</option>
+                  <option value="REG.RU">REG.RU</option>
+                  <option value="RU-CENTER">RU-CENTER</option>
+                  <option value="Cloudflare Registrar">Cloudflare Registrar</option>
+                  <option value="Namecheap">Namecheap</option>
+                  <option value="GoDaddy">GoDaddy</option>
+                  <option value="Другое">Другое</option>
+                </select>
+              </div>
+
+              <div class="select-field">
+                <label for="hosting">Хостинг</label>
+                <select id="hosting" name="hosting" required>
+                  <option value="" selected disabled>Выберите хостинг</option>
+                  <option value="Timeweb">Timeweb</option>
+                  <option value="Beget">Beget</option>
+                  <option value="REG.RU">REG.RU</option>
+                  <option value="Selectel">Selectel</option>
+                  <option value="Vercel">Vercel</option>
+                  <option value="Netlify">Netlify</option>
+                  <option value="GitHub Pages">GitHub Pages</option>
+                  <option value="Другое">Другое</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="conditional-field" id="registrar-other-field" hidden>
+              <label for="registrar-other">Укажите регистратора</label>
+              <input
+                id="registrar-other"
+                name="registrar_other"
+                type="text"
+                maxlength="150"
+                placeholder="Название регистратора"
+                disabled
+              >
+            </div>
+
+            <div class="conditional-field" id="hosting-other-field" hidden>
+              <label for="hosting-other">Укажите хостинг</label>
+              <input
+                id="hosting-other"
+                name="hosting_other"
+                type="text"
+                maxlength="150"
+                placeholder="Название хостинга"
+                disabled
+              >
+            </div>
+
+            <label for="message">О вашем проекте</label>
+            <textarea
+              id="message"
+              name="message"
+              rows="7"
+              maxlength="5000"
+              required
+              placeholder="Расскажите подробнее почему для вас, и для ваших пользователей, важно что-бы ваш проект был доступен в белый списках"
+            ></textarea>
+
+            <label class="consent">
+              <input type="checkbox" required>
+              <span>
+                Я понимаю, что ответ будет доступен по уникальной ссылке. Не буду
+                указывать в заявке пароли и другие секретные данные.
+              </span>
+            </label>
+
+            <button class="button button--primary" type="submit">
+              <span>Отправить заявку</span>
+              <span aria-hidden="true">↗</span>
+            </button>
+            <p class="form-status" id="form-status" role="status" aria-live="polite"></p>
+          </form>
+
+          <div class="success" id="success" hidden>
+            <div class="success__mark" aria-hidden="true">✓</div>
+            <p class="eyebrow">Заявка отправлена</p>
+            <h2>Сохраните ссылку</h2>
+            <p>
+              Ответ появится на этой странице после рассмотрения заявки.
+            </p>
+            <div class="request-code">
+              <span>Номер заявки</span>
+              <strong id="success-id"></strong>
+            </div>
+            <button class="button button--primary" id="copy-link" type="button">
+              <span>Скопировать ссылку</span>
+              <span aria-hidden="true">⧉</span>
+            </button>
+            <a class="text-link" href="./">Отправить ещё одну заявку</a>
+          </div>
+        </div>
+      </section>
+
+      <section class="card card--dark" id="resolution-section" aria-labelledby="resolution-title">
+        <div class="card__heading">
+          <span class="step">02</span>
+          <div>
+            <h2 id="resolution-title">Проверить ответ</h2>
+            <p>Введите номер заявки или откройте сохранённую ссылку.</p>
+          </div>
+        </div>
+
+        <form class="lookup" id="lookup-form">
+          <label class="sr-only" for="lookup-id">Номер заявки</label>
+          <input
+            id="lookup-id"
+            type="text"
+            inputmode="text"
+            autocomplete="off"
+            spellcheck="false"
+            placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+            required
+          >
+          <button class="button button--light" type="submit">Проверить</button>
+        </form>
+
+        <div class="resolution" id="resolution" hidden aria-live="polite">
+          <p class="resolution__label" id="resolution-label"></p>
+          <div id="resolution-content"></div>
+        </div>
+
+        <div class="saved" id="saved" hidden>
+          <p>Заявки, сохранённые в этом браузере</p>
+          <div class="saved__list" id="saved-list"></div>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <span>© <span id="year"></span> Доступен</span>
+      <span>РКН, минцифры, вторая служба, пыня - руки прочь от Интернета</span>
+    </footer>
+  </body>
+</html>
