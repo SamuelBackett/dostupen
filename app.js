@@ -2,12 +2,15 @@ const FORM_ENDPOINT = "https://formspree.io/f/mwvjggll";
 const STORAGE_KEY = "dostupen-request-ids";
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const TOKEN_PATTERN = /^[A-Za-z0-9_-]{43}$/;
 
 const requestForm = document.querySelector("#request-form");
 const requestSection = document.querySelector("#request-section");
 const requestToggle = document.querySelector("#request-toggle");
 const requestBody = document.querySelector("#request-body");
 const requestIdInput = document.querySelector("#request-id-input");
+const dataTokenInput = document.querySelector("#data-token-input");
+const encryptionKeyInput = document.querySelector("#encryption-key-input");
 const registrarSelect = document.querySelector("#registrar");
 const registrarOtherField = document.querySelector("#registrar-other-field");
 const registrarOtherInput = document.querySelector("#registrar-other");
@@ -26,8 +29,15 @@ const resolutionContent = document.querySelector("#resolution-content");
 const saved = document.querySelector("#saved");
 const savedList = document.querySelector("#saved-list");
 
-let currentRequestId = crypto.randomUUID();
-requestIdInput.value = currentRequestId;
+const currentRequest = {
+  id: crypto.randomUUID(),
+  token: DostupenCrypto.randomSecret(),
+  key: DostupenCrypto.randomSecret(),
+};
+
+requestIdInput.value = currentRequest.id;
+dataTokenInput.value = currentRequest.token;
+encryptionKeyInput.value = currentRequest.key;
 document.querySelector("#year").textContent = new Date().getFullYear();
 
 function setRequestCollapsed(collapsed) {
@@ -47,41 +57,61 @@ function toggleOtherField(select, field, input) {
   }
 }
 
-function getSavedIds() {
+function isValidRequestAccess(value) {
+  return (
+    value &&
+    UUID_PATTERN.test(value.id) &&
+    TOKEN_PATTERN.test(value.token) &&
+    TOKEN_PATTERN.test(value.key)
+  );
+}
+
+function getStoredValue() {
   try {
     const value = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
-    return Array.isArray(value) ? value.filter((id) => UUID_PATTERN.test(id)) : [];
+    return Array.isArray(value) ? value : [];
   } catch {
     return [];
   }
 }
 
-function saveId(id) {
-  const ids = [id, ...getSavedIds().filter((savedId) => savedId !== id)].slice(0, 10);
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(ids));
-  renderSavedIds();
+function getSavedRequests() {
+  return getStoredValue().filter(isValidRequestAccess);
 }
 
-function requestUrl(id) {
+function saveRequest(request) {
+  const requests = [
+    request,
+    ...getSavedRequests().filter((savedRequest) => savedRequest.id !== request.id),
+  ].slice(0, 10);
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(requests));
+  renderSavedRequests();
+}
+
+function requestUrl(request) {
   const url = new URL(window.location.href);
   url.search = "";
   url.hash = "";
-  url.searchParams.set("request", id);
+  url.searchParams.set("request", request.id);
+  url.hash = new URLSearchParams({
+    token: request.token,
+    key: request.key,
+  }).toString();
   return url.toString();
 }
 
-function renderSavedIds() {
-  const ids = getSavedIds();
-  saved.hidden = ids.length === 0;
+function renderSavedRequests() {
+  const requests = getSavedRequests();
+  saved.hidden = requests.length === 0;
   savedList.replaceChildren();
 
-  ids.forEach((id) => {
+  requests.forEach((request) => {
     const button = document.createElement("button");
     button.type = "button";
-    button.textContent = id;
+    button.textContent = request.id;
     button.addEventListener("click", () => {
-      lookupInput.value = id;
-      checkResolution(id);
+      lookupInput.value = request.id;
+      checkResolution(request);
     });
     savedList.append(button);
   });
@@ -97,30 +127,51 @@ function showResolution(type, label, message) {
   resolution.hidden = false;
 }
 
-async function checkResolution(rawId) {
-  const id = rawId.trim().toLowerCase();
+function accessFromUrl(value) {
+  try {
+    const url = new URL(value, window.location.href);
+    const fragment = new URLSearchParams(url.hash.slice(1));
+    return {
+      id: url.searchParams.get("request")?.toLowerCase() || "",
+      token: fragment.get("token") || "",
+      key: fragment.get("key") || "",
+    };
+  } catch {
+    return null;
+  }
+}
 
-  if (!UUID_PATTERN.test(id)) {
-    showResolution("error", "Неверный номер", "Проверьте номер заявки и попробуйте ещё раз.");
+function accessFromInput(value) {
+  const normalized = value.trim();
+
+  if (UUID_PATTERN.test(normalized)) {
+    return getSavedRequests().find(
+      (request) => request.id === normalized.toLowerCase(),
+    );
+  }
+
+  return accessFromUrl(normalized);
+}
+
+async function checkResolution(request) {
+  if (!isValidRequestAccess(request)) {
+    showResolution(
+      "error",
+      "Недостаточно данных",
+      "Откройте полную сохранённую ссылку. Одного номера заявки на новом устройстве недостаточно.",
+    );
     return;
   }
 
-  lookupInput.value = id;
+  lookupInput.value = request.id;
   showResolution("pending", "Проверяем", "Загружаем актуальный статус заявки…");
 
   try {
-    const response = await fetch(`./resolutions.json?t=${Date.now()}`, {
+    const response = await fetch(`./data/${request.token}.json?t=${Date.now()}`, {
       cache: "no-store",
     });
 
-    if (!response.ok) {
-      throw new Error("Could not load resolutions");
-    }
-
-    const resolutions = await response.json();
-    const result = resolutions[id];
-
-    if (!result) {
+    if (response.status === 404) {
       showResolution(
         "pending",
         "На рассмотрении",
@@ -129,18 +180,19 @@ async function checkResolution(rawId) {
       return;
     }
 
-    const answer = typeof result === "string" ? result : result.answer;
-    if (!answer) {
-      throw new Error("Invalid resolution format");
+    if (!response.ok) {
+      throw new Error("Could not load resolution");
     }
 
+    const payload = await response.json();
+    const answer = await DostupenCrypto.decryptText(payload, request.key);
     showResolution("ready", "Ответ готов", answer);
-    saveId(id);
+    saveRequest(request);
   } catch {
     showResolution(
       "error",
-      "Не удалось проверить",
-      "Обновите страницу или попробуйте ещё раз немного позже.",
+      "Не удалось прочитать ответ",
+      "Файл ответа повреждён либо ссылка содержит неверный ключ.",
     );
   }
 }
@@ -164,14 +216,14 @@ requestForm.addEventListener("submit", async (event) => {
       throw new Error("Form submission failed");
     }
 
-    saveId(currentRequestId);
-    successId.textContent = currentRequestId;
+    saveRequest(currentRequest);
+    successId.textContent = currentRequest.id;
     requestForm.hidden = true;
     success.hidden = false;
 
-    const url = requestUrl(currentRequestId);
+    const url = requestUrl(currentRequest);
     window.history.replaceState({}, "", url);
-    lookupInput.value = currentRequestId;
+    lookupInput.value = currentRequest.id;
   } catch {
     formStatus.textContent =
       "Не удалось отправить заявку. Проверьте соединение и попробуйте ещё раз.";
@@ -196,7 +248,7 @@ copyLinkButton.addEventListener("click", async () => {
   const originalText = copyLinkButton.querySelector("span").textContent;
 
   try {
-    await navigator.clipboard.writeText(requestUrl(currentRequestId));
+    await navigator.clipboard.writeText(requestUrl(currentRequest));
     copyLinkButton.querySelector("span").textContent = "Ссылка скопирована";
   } catch {
     copyLinkButton.querySelector("span").textContent = "Не удалось скопировать";
@@ -209,15 +261,15 @@ copyLinkButton.addEventListener("click", async () => {
 
 lookupForm.addEventListener("submit", (event) => {
   event.preventDefault();
-  checkResolution(lookupInput.value);
+  checkResolution(accessFromInput(lookupInput.value));
 });
 
-const requestIdFromUrl = new URLSearchParams(window.location.search).get("request");
-if (requestIdFromUrl) {
-  lookupInput.value = requestIdFromUrl;
-  checkResolution(requestIdFromUrl);
+const requestFromUrl = accessFromUrl(window.location.href);
+if (requestFromUrl?.id) {
+  lookupInput.value = requestFromUrl.id;
+  checkResolution(requestFromUrl);
   document.querySelector("#resolution-section").scrollIntoView();
 }
 
-renderSavedIds();
-setRequestCollapsed(getSavedIds().length > 0);
+renderSavedRequests();
+setRequestCollapsed(getStoredValue().length > 0);

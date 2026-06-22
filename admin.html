@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Подготовить ответ — Доступен</title>
+    <link rel="stylesheet" href="./styles.css">
+    <script src="./crypto-utils.js" defer></script>
+    <script src="./admin.js" defer></script>
+  </head>
+  <body>
+    <main class="page admin-page">
+      <header class="admin-header">
+        <a class="brand" href="./">Доступен</a>
+        <h1>Подготовить ответ</h1>
+        <p class="lead">
+          Данные шифруются локально в браузере. На сервер ничего не отправляется.
+        </p>
+      </header>
+
+      <section class="card">
+        <form id="admin-form" class="admin-form">
+          <label for="admin-token">Токен</label>
+          <input
+            id="admin-token"
+            type="text"
+            autocomplete="off"
+            spellcheck="false"
+            placeholder="data_token"
+            pattern="[A-Za-z0-9_-]{43}"
+            required
+          >
+
+          <label for="admin-key">Ключ шифрования</label>
+          <input
+            id="admin-key"
+            type="text"
+            autocomplete="off"
+            spellcheck="false"
+            placeholder="encryption_key"
+            pattern="[A-Za-z0-9_-]{43}"
+            required
+          >
+
+          <label for="admin-answer">Ответ</label>
+          <textarea
+            id="admin-answer"
+            rows="10"
+            maxlength="10000"
+            required
+            placeholder="Введите ответ на заявку"
+          ></textarea>
+
+          <button class="button button--primary" type="submit">
+            Скачать зашифрованный файл
+          </button>
+          <p class="form-status" id="admin-status" role="status"></p>
+        </form>
+      </section>
+    </main>
+  </body>
+</html>

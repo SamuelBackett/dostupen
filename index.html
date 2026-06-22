@@ -13,21 +13,32 @@
       href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><circle cx=%2250%22 cy=%2250%22 r=%2240%22 fill=%22%2339ff14%22/></svg>"
     >
     <link rel="stylesheet" href="./styles.css">
+    <script src="./crypto-utils.js" defer></script>
     <script src="./app.js" defer></script>
   </head>
   <body>
     <main class="page">
       <header class="hero">
         <div>
-          <a class="brand" href="./" aria-label="Доступен — главная">Доступен</a>
+          <a class="brand" href="./" aria-label="Доступен">Доступен</a>
           <p class="eyebrow">В Белый списках</p>
         </div>
       </header>
-      <section class="card" id="request-section" aria-labelledby="request-title">
-        <div>
-          <p>Во многих регионах белые списки внедрены на постоянной основе с мая 2025 года. Где-то их включают во время прилетов.
+      <section class="card" id="intro-section">
+        <h2 id="purpose-title">О проекте</h2>
+        <div class="card__content">
+          <p>Во многих регионах белые списки внедрены на постоянной основе с мая 2025 года. Где-то их включают во время прилетов.</p>
           <p>Страдают от этого как простые люди, так и бизнес. Интернет превращается в пару десятков доступных ресурсов полностью подконтрольных государству. Это не интернет. </p>
           <p>Мы не можем победить белые списки, но мы можем помочь проектам попасть в них, не занося в минцифры чемодан денег. Давайте попробуем, технически это не очень сложно.</p>
+        </div>
+      </section>
+
+      <section class="card" id="technical-section" aria-labelledby="technical-title">
+        <h2 id="technical-title">Как это работает</h2>
+        <div class="technical-content">
+          <p>Попасть в белый список не простая техническая задача. Данный проект позволяет перенести ваш сайт за уже существующий сервер в белых списках.</p>
+          <p>Оставьте заявку, получите ответ и следуйте инструкциям. Как правило, все сводится к переносу DNS-entrypoint на указанный нами сервер. Он сделает L4-проксирование к вашему origin.</p>
+          <p>Ваш ресурс станет доступен в белых списках. TLS остается на вашей стороне, мы не вмешиваемся в трафик, не расшифровываем его, просто проксируем на уровне L4.</p>
         </div>
       </section>
 
@@ -39,7 +50,6 @@
           aria-expanded="true"
           aria-controls="request-body"
         >
-          <span class="step">01</span>
           <span class="card__toggle-copy">
             <h2 id="request-title">Новая заявка</h2>
           </span>
@@ -53,6 +63,8 @@
             method="POST"
           >
             <input id="request-id-input" type="hidden" name="request_id">
+            <input id="data-token-input" type="hidden" name="data_token">
+            <input id="encryption-key-input" type="hidden" name="encryption_key">
             <input type="hidden" name="_subject" value="Новая заявка с сайта">
 
             <label for="website">Адрес сайта</label>
@@ -192,22 +204,21 @@
 
       <section class="card card--dark" id="resolution-section" aria-labelledby="resolution-title">
         <div class="card__heading">
-          <span class="step">02</span>
           <div>
             <h2 id="resolution-title">Проверить ответ</h2>
-            <p>Введите номер заявки или откройте сохранённую ссылку.</p>
+            <p>Откройте сохранённую ссылку или выберите заявку из этого браузера.</p>
           </div>
         </div>
 
         <form class="lookup" id="lookup-form">
-          <label class="sr-only" for="lookup-id">Номер заявки</label>
+          <label class="sr-only" for="lookup-id">Номер заявки или сохранённая ссылка</label>
           <input
             id="lookup-id"
             type="text"
-            inputmode="text"
+            inputmode="url"
             autocomplete="off"
             spellcheck="false"
-            placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+            placeholder="Номер заявки или сохранённая ссылка"
             required
           >
           <button class="button button--light" type="submit">Проверить</button>
